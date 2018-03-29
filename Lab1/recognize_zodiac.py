@@ -2,6 +2,7 @@ import scipy
 import numpy as np
 from scipy import misc
 import glob
+from matplotlib import pyplot as plt
 
 
 def read_pictures(directory):
@@ -18,9 +19,16 @@ def read_pictures(directory):
     return pictures, tests
 
 
+def plot_picture(picture):
+    plt.imshow(picture, cmap=plt.cm.gray)
+    plt.show()
+
+
 if __name__ == "__main__":
     pictures, tests = read_pictures('pic/')
-    print(pictures.keys())
-    print(tests.keys())
+    # print(pictures.keys())
+    # print(tests.keys())
 
-    print(np.shape(pictures['aries']))
+    # print(np.shape(pictures['aries']))
+    print(pictures['cancer'])
+    plot_picture(pictures['aries'])
