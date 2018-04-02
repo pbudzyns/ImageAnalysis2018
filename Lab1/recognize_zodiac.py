@@ -62,8 +62,21 @@ def make_prediction(picture, dataset_potentials):
     return min(results, key=results.get)
 
 
-def plot_picture(picture):
+def plot_picture(picture, title):
     plt.imshow(picture, cmap=plt.cm.gray)
+    plt.title(title)
+    plt.show()
+
+
+def plot_test_pred(test, pic):
+    fig = plt.figure()
+    ax = fig.add_subplot(121)
+    ax.imshow(test, cmap=plt.cm.gray)
+    ax.set_title('Test image')
+
+    ax2 = fig.add_subplot(122)
+    ax2.imshow(pic, cmap=plt.cm.gray)
+    ax2.set_title('Prediction')
     plt.show()
 
 
@@ -75,3 +88,7 @@ if __name__ == "__main__":
     for key, pic in tests.items():
         prediction = make_prediction(pic, pictures_potentials)
         print(key, ': ', prediction)
+        # plot_picture(pic, 'test')
+        # plot_picture(pictures[prediction], 'Prediction')
+        plot_test_pred(pic, pictures[prediction])
+
