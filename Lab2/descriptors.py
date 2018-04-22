@@ -173,7 +173,7 @@ def find_best_set(descriptions, targets):
                 res_tmp = test_classifier(method, reduction(descriptions), targets, percent)
                 if res_tmp > best_res:
                     best_res = res_tmp
-                    result = alert.format(reduction.__name__, method.__name__, percent, best_res)
+                    result = alert.format(reduction.__name__, method.__name__, round(percent, 2), round(best_res, 2))
     return result
 
 
@@ -185,11 +185,15 @@ if __name__ == "__main__":
     # print(np.shape(images))
     # print(np.shape(targets))
     # print(np.unique(targets))
+    # plt.plot(descriptions[0])
+    # plt.show()
 
     # test_dtc_classification(descriptions, targets, test_percent=0.1)
     # test_svm_classification(descriptions, targets, test_percent=0.1)
 
-    # reduced_descriptions = reduce_data_by_periodicity(descriptions)
-    reduced_descriptions = reduce_data_by_window_mean(descriptions, windows=10)
+    reduced_descriptions = reduce_data_by_periodicity(descriptions)
+    # reduced_descriptions = reduce_data_by_window_mean(descriptions, windows=20)
+    # plt.plot(reduced_descriptions[0])
+    # plt.show()
     test_classifier_plot_results(train_decision_tree, images, reduced_descriptions, targets, test_percent=0.05)
     # print(find_best_set(descriptions, targets))
