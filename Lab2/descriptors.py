@@ -6,6 +6,7 @@ from matplotlib import pyplot as plt
 from scipy import signal
 from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
+from sklearn.tree import DecisionTreeClassifier
 
 # Tags: 0, 1-regular car, 2-ambulance
 
@@ -75,6 +76,8 @@ def reduce_data_by_window_mean(descriptions, windows=10):
     results = np.zeros((len(descriptions), windows*3))
     for i, desc in enumerate(descriptions):
         parts = np.split(desc, 3)
+        # print(np.shape(parts))
+        # print(np.shape(np.mean(np.split(parts[0], windows), 1)))
         res = np.array([np.mean(np.split(part, windows), 1) for part in parts])
         results[i] = res.flatten()
     return results
@@ -92,14 +95,34 @@ def test_svm_classification(descriptions, targets, test_percent=0.1):
     classifier = train_svm(train_desc, train_targets)
 
     print('SVC testing .....')
+    print('Result: %f' % test_classifier(classifier, test_desc, test_target))
+
+
+def test_dtc_classification(descriptions, targets, test_percent=0.1):
+    train_desc, test_desc, train_targets, test_target = split_data(descriptions, targets, test_percent)
+    classifier = train_decision_tree(train_desc, train_targets)
+
+    print('Decision tree testing .....')
+    print('Result: %f' % test_classifier(classifier, test_desc, test_target))
+
+
+def train_decision_tree(train_data, train_target):
+    print('DecisionTreeClassifier training....')
+    clf = DecisionTreeClassifier(random_state=0)
+    clf.fit(train_data, train_target)
+    return clf
+
+
+def test_classifier(clf, test_desc, test_target):
     size = len(test_desc)
     results = np.zeros(size)
     idxs = np.zeros(size)
     for i in range(size):
-        prediction = classifier.predict([test_desc[i]])
+        prediction = clf.predict([test_desc[i]])
         results[i] = prediction == test_target[i]
         # plot_picture(imgs[i], 'Target: %d, predicted: %d'%(test_target[i], prediction))
-    print(np.mean(results))
+    # print(np.mean(results))
+    return np.mean(results)
 
 
 def plot_data_compare(data1, data2):
@@ -145,18 +168,10 @@ if __name__ == "__main__":
 
 
 
-    # descriptions = reduce_data_by_periodicity(descriptions)
-    descriptions = reduce_data_by_window_mean(descriptions, windows=5)
+    descriptions = reduce_data_by_periodicity(descriptions)
+    # descriptions = reduce_data_by_window_mean(descriptions, windows=20)
 
     for i in range(5):
         test_svm_classification(descriptions, targets, test_percent=0.1)
-# for i in range(1, 5):
-        # idx = i
-        # sample_image = images[idx]
-        # sample_target = target[idx]
-        # description = get_gist_descriptor(sample_image)
-        # peakid = find_peak(description)
-
-        # plt.plot(description[:peakid])
-        # plt.show()
-        # plot_data_compare(descriptions[i], descriptions[i][:mean_peak])
+    for i in range(5):
+        test_dtc_classification(descriptions, targets, test_percent=0.1)
