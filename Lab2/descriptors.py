@@ -28,7 +28,7 @@ def get_gist_descriptor(image):
 
 
 def get_images_descriptions(images):
-    print('Computing images descriptions.... ')
+    # print('Computing images descriptions.... ')
     desc_size = len(get_gist_descriptor(images[0]))
     result = np.zeros((len(images), desc_size))
     for i, img in enumerate(images):
@@ -63,14 +63,14 @@ def get_mean_periodicity(descriptions):
 
 def reduce_data_by_periodicity(descriptions):
     # mean_peak = get_mean_periodicity(descriptions) #Result: 159
-    print('Data reduction by mean periodicity....')
+    # print('Data reduction by mean periodicity....')
     mean_peak = 159
     result = descriptions[:, :mean_peak]
     return result
 
 
 def reduce_data_by_window_mean(descriptions, windows=10):
-    print('Data reduction by window mean....')
+    # print('Data reduction by window mean....')
     # size = len(descriptions)
     # third_part = int(size/3)
     results = np.zeros((len(descriptions), windows*3))
@@ -84,36 +84,40 @@ def reduce_data_by_window_mean(descriptions, windows=10):
 
 
 def train_svm(train_data, train_targets):
-    print('SVC training....')
+    # print('SVC training....')
     clf = SVC()
     clf.fit(train_data, train_targets)
     return clf
 
 
-def test_svm_classification(descriptions, targets, test_percent=0.1):
-    train_desc, test_desc, train_targets, test_target = split_data(descriptions, targets, test_percent)
-    classifier = train_svm(train_desc, train_targets)
-
-    print('SVC testing .....')
-    print('Result: %f' % test_classifier(classifier, test_desc, test_target))
-
-
-def test_dtc_classification(descriptions, targets, test_percent=0.1):
-    train_desc, test_desc, train_targets, test_target = split_data(descriptions, targets, test_percent)
-    classifier = train_decision_tree(train_desc, train_targets)
-
-    print('Decision tree testing .....')
-    print('Result: %f' % test_classifier(classifier, test_desc, test_target))
+# def test_svm_classification(descriptions, targets, test_percent=0.1):
+#     train_desc, test_desc, train_targets, test_target = split_data(descriptions, targets, test_percent)
+#     classifier = train_svm(train_desc, train_targets)
+#
+#     print('SVC testing .....')
+#     print('Result: %f' % test_classifier(classifier, test_desc, test_target))
+#
+#
+# def test_dtc_classification(descriptions, targets, test_percent=0.1):
+#     train_desc, test_desc, train_targets, test_target = split_data(descriptions, targets, test_percent)
+#
+#     classifier = train_decision_tree(train_desc, train_targets)
+#
+#     print('Decision tree testing .....')
+#     print('Result: %f' % test_classifier(classifier, test_desc, test_target))
 
 
 def train_decision_tree(train_data, train_target):
-    print('DecisionTreeClassifier training....')
+    # print('DecisionTreeClassifier training....')
     clf = DecisionTreeClassifier(random_state=0)
     clf.fit(train_data, train_target)
     return clf
 
 
-def test_classifier(clf, test_desc, test_target):
+def test_classifier(classifier, descriptions, targets, test_percent):
+    train_desc, test_desc, train_targets, test_target = split_data(descriptions, targets, test_percent)
+    #
+    clf = classifier(train_desc, train_targets)
     size = len(test_desc)
     results = np.zeros(size)
     idxs = np.zeros(size)
@@ -139,6 +143,40 @@ def plot_data_compare(data1, data2):
     plt.show()
 
 
+def test_classifier_plot_results(classifier, images, descriptions, targets, test_percent=0.1):
+    targets_with_idx = np.c_[targets, np.arange(0,len(targets))]
+    train_desc, test_desc, train_trg_idx, test_trg_idx = split_data(descriptions, targets_with_idx, test_percent)
+
+    test_target = test_trg_idx[:, 0]
+    test_idx = test_trg_idx[:, 1]
+    train_target = train_trg_idx[:, 0]
+
+    clf = classifier(train_desc, train_target)
+
+    size = len(test_desc)
+    results = np.zeros(size)
+    idxs = np.zeros(size)
+    for i in range(size):
+        prediction = clf.predict([test_desc[i]])
+        results[i] = prediction == test_target[i]
+        plot_picture(images[test_idx[i]], 'Target: %d, predicted: %d'%(test_target[i], prediction))
+    print(np.mean(results))
+
+
+def find_best_set(descriptions, targets):
+    alert = "Resuction: {}, Method: {}, Test_perc: {}, Result: {}"
+    result = ""
+    best_res = 0
+    for reduction in [reduce_data_by_window_mean, reduce_data_by_periodicity]:
+        for method in [train_decision_tree, train_svm]:
+            for percent in np.arange(0.05, 0.31, 0.05):
+                res_tmp = test_classifier(method, reduction(descriptions), targets, percent)
+                if res_tmp > best_res:
+                    best_res = res_tmp
+                    result = alert.format(reduction.__name__, method.__name__, percent, best_res)
+    return result
+
+
 if __name__ == "__main__":
     images = load_data("veeimgdump")
     targets = load_data("veetrgtdump")
@@ -148,30 +186,10 @@ if __name__ == "__main__":
     # print(np.shape(targets))
     # print(np.unique(targets))
 
-    #pprint(sample_image)
-    #pprint(sample_image[185])
-    #print(np.shape(sample_image[185]))
-    # descriptor = gist.extract(sample_image)
-    # print(descriptor)
-    #plot_picture(descriptor, 'Descriptor')
-    # reduced = descriptor[310:620]
-    # plt.plot(reduced)
-    # plt.plot(descriptor)
-    # plt.show()
+    # test_dtc_classification(descriptions, targets, test_percent=0.1)
+    # test_svm_classification(descriptions, targets, test_percent=0.1)
 
-    # img = images[0]
-    # gray_pic = np.mean(img, axis=2)
-    # plot_picture(gray_pic, 'Gray')
-    # print(np.shape(img))
-    # print(np.shape(gray_pic))
-    # print(len(get_gist_descriptor(gray_pic)))
-
-
-
-    descriptions = reduce_data_by_periodicity(descriptions)
-    # descriptions = reduce_data_by_window_mean(descriptions, windows=20)
-
-    for i in range(5):
-        test_svm_classification(descriptions, targets, test_percent=0.1)
-    for i in range(5):
-        test_dtc_classification(descriptions, targets, test_percent=0.1)
+    # reduced_descriptions = reduce_data_by_periodicity(descriptions)
+    reduced_descriptions = reduce_data_by_window_mean(descriptions, windows=10)
+    test_classifier_plot_results(train_decision_tree, images, reduced_descriptions, targets, test_percent=0.05)
+    # print(find_best_set(descriptions, targets))
